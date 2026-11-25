@@ -1,0 +1,1381 @@
+```html
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Kelas - Arsip Kenangan & Momen Sekolah</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- JSZip untuk Ekspor Semua Foto ke ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                        'scale-in': 'scaleIn 0.25s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        scaleIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-amber-50/40 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased transition-colors duration-300 min-h-screen flex flex-col">
+
+    <!-- Navbar / Header -->
+    <header class="sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <!-- Brand Logo & Class Identity -->
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                    <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-display font-extrabold text-base sm:text-lg tracking-tight leading-none truncate">
+                            Galeri <span class="text-indigo-600 dark:text-indigo-400">Kelas</span>
+                        </h1>
+                    </div>
+                    <!-- Editable Class Badge -->
+                    <button id="editClassBtn" title="Klik untuk ubah nama kelas" class="group mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/15 hover:bg-indigo-100 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 text-[11px] font-semibold transition-colors max-w-full">
+                        <span id="classBadgeText" class="truncate">XII IPA 1 • Angkatan 2026</span>
+                        <i data-lucide="pencil" class="w-2.5 h-2.5 opacity-60 group-hover:opacity-100 shrink-0"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar (Desktop) -->
+            <div class="hidden md:flex flex-1 max-w-md mx-4">
+                <div class="relative w-full">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="searchInputDesktop" placeholder="Cari momen, cerita, atau nama teman..." 
+                        class="w-full pl-10 pr-4 py-2 text-sm rounded-full bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-all">
+                </div>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <!-- Backup / Ekspor & Import Button -->
+                <button id="openBackupModalBtn" title="Backup, Ekspor & Pulihkan Galeri" class="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold transition-colors">
+                    <i data-lucide="folder-sync" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden lg:inline">Backup / Ekspor</span>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button id="themeToggle" aria-label="Ubah Tema" class="p-2.5 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block text-amber-400"></i>
+                </button>
+
+                <!-- Add Photo Button -->
+                <button id="openAddModalBtn" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold shadow-sm shadow-indigo-600/25 transition-all">
+                    <i data-lucide="camera" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Tambah Kenangan</span>
+                    <span class="sm:hidden">Tambah</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar (Mobile) -->
+        <div class="md:hidden px-4 pb-3">
+            <div class="relative w-full">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInputMobile" placeholder="Cari momen, cerita, atau pengunggah..." 
+                    class="w-full pl-10 pr-4 py-2 text-sm rounded-full bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-all">
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Banner Singkat -->
+    <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div class="rounded-3xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-500 p-6 sm:p-8 text-white shadow-lg shadow-indigo-500/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-medium mb-2.5">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                    <span>Album Digital Bersama</span>
+                </div>
+                <h2 id="heroClassTitle" class="font-display text-xl sm:text-2xl font-extrabold tracking-tight">
+                    Jejak Cerita & Momen XII IPA 1
+                </h2>
+                <p class="text-xs sm:text-sm text-blue-100 mt-1 max-w-xl">
+                    Kumpulkan foto-foto keseruan di kelas, praktikum lab, lomba classmeet, hingga study tour supaya nggak hilang tenggelam di grup chat!
+                </p>
+            </div>
+            <div class="flex items-center gap-3 bg-white/15 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20 shrink-0 self-start sm:self-center">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i data-lucide="images" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <p class="text-[11px] uppercase tracking-wider text-blue-100 font-medium">Total Arsip</p>
+                    <p class="font-display text-xl font-extrabold leading-tight"><span id="totalArchiveCount">0</span> <span class="text-xs font-normal">Momen</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        <!-- Filter & Stats Bar -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8">
+            <!-- School Category Pills -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0" id="categoryFilters">
+                <button data-category="Semua" class="filter-btn active px-4 py-2 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm">
+                    Semua Momen
+                </button>
+                <button data-category="Belajar & Praktikum" class="filter-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-700">
+                    📚 Belajar & Praktikum
+                </button>
+                <button data-category="Classmeet & Lomba" class="filter-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-700">
+                    🏆 Classmeet & Lomba
+                </button>
+                <button data-category="Study Tour & Acara" class="filter-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-700">
+                    🚌 Study Tour & Acara
+                </button>
+                <button data-category="Kebersamaan & Random" class="filter-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-700">
+                    ✌️ Kebersamaan & Random
+                </button>
+            </div>
+
+            <!-- Filtered Photo Counter -->
+            <div class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium shrink-0">
+                Menampilkan <span id="photoCount" class="text-slate-900 dark:text-white font-bold">0</span> foto
+            </div>
+        </div>
+
+        <!-- Photo Grid -->
+        <div id="photoGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6">
+            <!-- Kartu foto kenangan kelas akan dirender di sini -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center animate-fade-in">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-slate-800/80 flex items-center justify-center text-indigo-500 mb-4">
+                <i data-lucide="image-off" class="w-8 h-8"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">Belum ada momen di kategori ini</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                Yuk abadikan keseruan bareng teman sekelas dan unggah foto pertamanya sekarang!
+            </p>
+            <button id="emptyAddBtn" class="px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all shadow-sm">
+                + Tambah Foto Kenangan
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200/80 dark:border-slate-800/80 py-6 mt-12 bg-white/50 dark:bg-slate-900/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <p>Galeri Kelas Digital • Tersimpan otomatis di penyimpanan lokal browser Anda.</p>
+            <button id="resetDemoBtn" class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+                Muat Ulang Contoh Kenangan Kelas
+            </button>
+        </div>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- MODAL: BACKUP, EKSPOR & PULIHKAN GALERI    -->
+    <!-- ========================================== -->
+    <div id="backupModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md my-auto overflow-hidden shadow-2xl animate-scale-in">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <i data-lucide="hard-drive-download" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-display text-base font-bold">Ekspor & Cadangkan Galeri</h2>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Simpan foto ke HP atau bagikan ke teman sekelas</p>
+                    </div>
+                </div>
+                <button id="closeBackupModalBtn" class="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 space-y-5">
+                <!-- Opsi 1: Ekspor Semua Foto ke ZIP -->
+                <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 space-y-2.5">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h3 class="font-display text-sm font-bold text-indigo-950 dark:text-indigo-200">Unduh Semua Foto (.ZIP)</h3>
+                            <p class="text-xs text-indigo-800/80 dark:text-indigo-300/80 mt-0.5 leading-relaxed">
+                                Mengemas seluruh gambar ke dalam satu arsip ZIP agar praktis disimpan di galeri atau memori HP.
+                            </p>
+                        </div>
+                        <i data-lucide="file-archive" class="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5"></i>
+                    </div>
+                    <button id="exportZipBtn" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span id="exportZipBtnText">Unduh Semua Foto (.ZIP)</span>
+                    </button>
+                </div>
+
+                <!-- Opsi 2: Backup Data Lengkap (.JSON) -->
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h3 class="font-display text-sm font-bold text-slate-900 dark:text-slate-100">Cadangkan Album Lengkap (.JSON)</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                Menyimpan seluruh foto beserta judul, tanggal, kategori, pengunggah, dan cerita kenangan untuk dibagikan ke teman sekelas.
+                            </p>
+                        </div>
+                        <i data-lucide="file-json" class="w-5 h-5 text-slate-600 dark:text-slate-300 shrink-0 mt-0.5"></i>
+                    </div>
+                    <button id="exportJsonBtn" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                        <span>Ekspor File Cadangan (.JSON)</span>
+                    </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                    <span class="flex-shrink mx-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Pulihkan Data</span>
+                    <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                </div>
+
+                <!-- Opsi 3: Import / Pulihkan (.JSON) -->
+                <div class="space-y-2">
+                    <label for="importJsonInput" class="w-full py-3 px-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 bg-white dark:bg-slate-900 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5 cursor-pointer transition-all flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        <i data-lucide="upload" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                        <span>Pulihkan (Import) File Cadangan .JSON</span>
+                        <input type="file" id="importJsonInput" accept=".json,application/json" class="hidden">
+                    </label>
+                    <p class="text-[11px] text-center text-slate-400">
+                        Foto baru dari file cadangan akan digabungkan tanpa menghapus foto yang sudah ada.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- LIGHTBOX / MODAL PRATINJAU LAYAR PENUH     -->
+    <!-- ========================================== -->
+    <div id="lightboxModal" class="fixed inset-0 z-50 hidden flex-col bg-slate-950/95 backdrop-blur-md text-white select-none">
+        <!-- Top Bar -->
+        <div class="flex items-center justify-between px-4 sm:px-6 py-4 bg-gradient-to-b from-black/70 to-transparent z-10">
+            <div class="flex items-center gap-3">
+                <span id="lightboxCategory" class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 backdrop-blur-sm">Kategori</span>
+                <span id="lightboxCounter" class="text-xs font-medium text-slate-300">1 / 1</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Download / Save Photo Button (WebView & Browser Compatible) -->
+                <button id="lightboxDownloadBtn" title="Unduh / Simpan Foto ke Galeri" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-semibold shadow-sm transition-all">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Unduh Foto</span>
+                </button>
+                <!-- Delete Button -->
+                <button id="lightboxDeleteBtn" title="Hapus Foto" class="flex items-center gap-1.5 px-3 py-2 rounded-full bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white text-xs font-semibold transition-colors">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Hapus</span>
+                </button>
+                <!-- Close Button -->
+                <button id="closeLightboxBtn" title="Tutup (Esc)" class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Image Stage -->
+        <div class="flex-1 relative flex items-center justify-center px-4 sm:px-16 overflow-hidden">
+            <!-- Prev Button -->
+            <button id="prevPhotoBtn" aria-label="Foto Sebelumnya" class="absolute left-3 sm:left-6 z-10 p-3 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-sm text-white transition-all active:scale-90">
+                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+
+            <!-- Main Image -->
+            <img id="lightboxImg" src="" alt="Pratinjau Layar Penuh" class="max-h-[68vh] max-w-full object-contain rounded-xl shadow-2xl transition-opacity duration-200">
+
+            <!-- Next Button -->
+            <button id="nextPhotoBtn" aria-label="Foto Berikutnya" class="absolute right-3 sm:right-6 z-10 p-3 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-sm text-white transition-all active:scale-90">
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Bottom Caption & Story -->
+        <div class="px-6 py-5 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
+            <div class="max-w-2xl mx-auto text-center">
+                <h3 id="lightboxTitle" class="font-display text-base sm:text-xl font-bold text-white">Judul Momen</h3>
+                <p id="lightboxStory" class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">Cerita kenangan akan tampil di sini.</p>
+                <div class="flex items-center justify-center gap-4 mt-3 text-xs text-slate-400">
+                    <span class="inline-flex items-center gap-1.5">
+                        <i data-lucide="user" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span id="lightboxUploader">Pengunggah</span>
+                    </span>
+                    <span>•</span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span id="lightboxDate">Tanggal</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CUSTOM CONFIRMATION MODAL                  -->
+    <!-- ========================================== -->
+    <div id="confirmDeleteModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in text-center">
+            <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold mb-1">Hapus Foto Kenangan Ini?</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Foto beserta ceritanya akan dihapus permanen dari album kelas.</p>
+            <div class="flex items-center justify-center gap-3">
+                <button id="cancelDeleteBtn" class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    Batal
+                </button>
+                <button id="confirmDeleteBtn" class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TOAST NOTIFICATION                         -->
+    <!-- ========================================== -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ========================================== -->
+    <!-- APPLICATION LOGIC (INDEXEDDB + UI)         -->
+    <!-- ========================================== -->
+    <script>
+        /**
+         * Konfigurasi Database IndexedDB Khusus Galeri Kelas
+         */
+        const DB_NAME = 'GaleriKelasDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'class_memories';
+
+        // 5 Contoh Foto Kenangan Kelas Bawaan
+        const DEFAULT_CLASS_PHOTOS = [
+            {
+                id: 'kelas-1',
+                title: 'Belajar Kelompok Persiapan Ujian Akhir',
+                category: 'Belajar & Praktikum',
+                uploader: 'Oleh: Nadia (Sekretaris)',
+                story: 'Diskusi serius tapi santai bareng kelompok belajar di perpustakaan sekolah menjelang ujian semester.',
+                momentDate: '2026-10-14',
+                src: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80',
+                createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
+            },
+            {
+                id: 'kelas-2',
+                title: 'Tim Basket Kelas Tembus Semifinal Classmeet!',
+                category: 'Classmeet & Lomba',
+                uploader: 'Oleh: Rafi & Tim Dokumentasi',
+                story: 'Pertandingan paling menegangkan di lapangan sekolah! Dukungan suporter satu kelas bikin semangat makin membara.',
+                momentDate: '2026-10-22',
+                src: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=900&q=80',
+                createdAt: new Date(Date.now() - 86400000 * 4).toISOString()
+            },
+            {
+                id: 'kelas-3',
+                title: 'Praktikum Kimia di Laboratorium',
+                category: 'Belajar & Praktikum',
+                uploader: 'Oleh: Dimas',
+                story: 'Eksperimen reaksi larutan bareng kelompok 3. Untung semua berjalan lancar sesuai prosedur!',
+                momentDate: '2026-11-02',
+                src: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=900&q=80',
+                createdAt: new Date(Date.now() - 86400000 * 3).toISOString()
+            },
+            {
+                id: 'kelas-4',
+                title: 'Perjalanan Study Tour & Kunjungan Edukasi',
+                category: 'Study Tour & Acara',
+                uploader: 'Oleh: Panitia Study Tour',
+                story: 'Momen foto bareng sebelum berangkat keliling kota. Satu bus penuh nyanyi bareng sepanjang perjalanan.',
+                momentDate: '2026-11-10',
+                src: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80',
+                createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
+            },
+            {
+                id: 'kelas-5',
+                title: 'Nongkrong & Makan Siang Bareng Sepulang Sekolah',
+                category: 'Kebersamaan & Random',
+                uploader: 'Oleh: Alya',
+                story: 'Cerita random dan ketawa bareng setelah jam pelajaran terakhir selesai. Bakal kangen banget sama suasana ini!',
+                momentDate: '2026-11-20',
+                src: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=900&q=80',
+                createdAt: new Date(Date.now() - 86400000).toISOString()
+            }
+        ];
+
+        // State Aplikasi
+        let db = null;
+        let allPhotos = [];
+        let filteredPhotos = [];
+        let currentCategory = 'Semua';
+        let searchQuery = '';
+        let currentLightboxIndex = -1;
+        let activeUploadTab = 'file';
+        let uploadedFileBase64 = null;
+
+        // State Identitas Kelas
+        let classInfo = {
+            name: 'XII IPA 1',
+            year: 'Angkatan 2026'
+        };
+
+        // Elemen DOM
+        const photoGrid = document.getElementById('photoGrid');
+        const emptyState = document.getElementById('emptyState');
+        const photoCount = document.getElementById('photoCount');
+        const totalArchiveCount = document.getElementById('totalArchiveCount');
+        const categoryButtons = document.querySelectorAll('.filter-btn');
+        const searchInputDesktop = document.getElementById('searchInputDesktop');
+        const searchInputMobile = document.getElementById('searchInputMobile');
+
+        // ==========================================
+        // MANAJEMEN IDENTITAS KELAS
+        // ==========================================
+        function loadClassIdentity() {
+            const saved = localStorage.getItem('galerikelas_identity');
+            if (saved) {
+                try {
+                    classInfo = JSON.parse(saved);
+                } catch (e) {}
+            }
+            updateClassIdentityUI();
+        }
+
+        function updateClassIdentityUI() {
+            document.getElementById('classBadgeText').textContent = `${classInfo.name} • ${classInfo.year}`;
+            document.getElementById('heroClassTitle').textContent = `Jejak Cerita & Momen ${classInfo.name}`;
+            document.title = `Galeri ${classInfo.name} - Arsip Kenangan Kelas`;
+        }
+
+        const editClassModal = document.getElementById('editClassModal');
+        document.getElementById('editClassBtn').addEventListener('click', () => {
+            document.getElementById('inputClassName').value = classInfo.name;
+            document.getElementById('inputClassYear').value = classInfo.year;
+            editClassModal.classList.remove('hidden');
+            editClassModal.classList.add('flex');
+        });
+
+        function closeClassModal() {
+            editClassModal.classList.add('hidden');
+            editClassModal.classList.remove('flex');
+        }
+
+        document.getElementById('closeClassModalBtn').addEventListener('click', closeClassModal);
+        document.getElementById('cancelClassModalBtn').addEventListener('click', closeClassModal);
+
+        document.getElementById('editClassForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            classInfo.name = document.getElementById('inputClassName').value.trim() || 'Kelas Kita';
+            classInfo.year = document.getElementById('inputClassYear').value.trim() || 'Angkatan 2026';
+            localStorage.setItem('galerikelas_identity', JSON.stringify(classInfo));
+            updateClassIdentityUI();
+            closeClassModal();
+            showToast('Identitas kelas berhasil diperbarui!');
+        });
+
+        // ==========================================
+        // INDEXEDDB OPERATIONS
+        // ==========================================
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Gagal membuka IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function getAllPhotosFromDB() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    // Urutkan berdasarkan tanggal momen terbaru, lalu waktu unggah terbaru
+                    const sorted = request.result.sort((a, b) => {
+                        const dateDiff = new Date(b.momentDate || b.createdAt) - new Date(a.momentDate || a.createdAt);
+                        if (dateDiff !== 0) return dateDiff;
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    });
+                    resolve(sorted);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function savePhotoToDB(photoObj) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(photoObj);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function deletePhotoFromDB(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadInitialData() {
+            try {
+                await initDB();
+                const isInitialized = localStorage.getItem('galerikelas_initialized');
+                let photos = await getAllPhotosFromDB();
+
+                if (!isInitialized && photos.length === 0) {
+                    for (const item of DEFAULT_CLASS_PHOTOS) {
+                        await savePhotoToDB(item);
+                    }
+                    localStorage.setItem('galerikelas_initialized', 'true');
+                    photos = await getAllPhotosFromDB();
+                }
+
+                allPhotos = photos;
+                applyFilters();
+            } catch (error) {
+                showToast('Terjadi kesalahan saat memuat galeri kelas.', 'error');
+            }
+        }
+
+        // ==========================================
+        // FILTER & RENDER GRID
+        // ==========================================
+        function applyFilters() {
+            totalArchiveCount.textContent = allPhotos.length;
+            const q = searchQuery.toLowerCase().trim();
+
+            filteredPhotos = allPhotos.filter(photo => {
+                const matchCategory = currentCategory === 'Semua' || photo.category === currentCategory;
+                const matchTitle = photo.title.toLowerCase().includes(q);
+                const matchUploader = (photo.uploader || '').toLowerCase().includes(q);
+                const matchStory = (photo.story || '').toLowerCase().includes(q);
+                return matchCategory && (matchTitle || matchUploader || matchStory);
+            });
+
+            renderGrid();
+        }
+
+        function getCategoryBadgeStyle(category) {
+            switch (category) {
+                case 'Belajar & Praktikum':
+                    return 'bg-sky-50/95 text-sky-700 border-sky-200/80 dark:bg-sky-950/90 dark:text-sky-300 dark:border-sky-800';
+                case 'Classmeet & Lomba':
+                    return 'bg-amber-50/95 text-amber-700 border-amber-200/80 dark:bg-amber-950/90 dark:text-amber-300 dark:border-amber-800';
+                case 'Study Tour & Acara':
+                    return 'bg-emerald-50/95 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/90 dark:text-emerald-300 dark:border-emerald-800';
+                default:
+                    return 'bg-purple-50/95 text-purple-700 border-purple-200/80 dark:bg-purple-950/90 dark:text-purple-300 dark:border-purple-800';
+            }
+        }
+
+        function renderGrid() {
+            photoGrid.innerHTML = '';
+            photoCount.textContent = filteredPhotos.length;
+
+            if (filteredPhotos.length === 0) {
+                photoGrid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            }
+
+            photoGrid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+
+            filteredPhotos.forEach((photo, index) => {
+                const card = document.createElement('div');
+                // Gaya Polaroid Modern
+                card.className = 'group bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col animate-fade-in';
+                card.style.animationDelay = `${Math.min(index * 40, 300)}ms`;
+
+                const formattedDate = formatDateIndo(photo.momentDate || photo.createdAt);
+                const uploaderText = photo.uploader ? photo.uploader : 'Anggota Kelas';
+                const badgeStyle = getCategoryBadgeStyle(photo.category);
+                const fallbackUrl = `https://placehold.co/600x450/1e293b/94a3b8?text=${encodeURIComponent(photo.title)}`;
+
+                card.innerHTML = `
+                    <!-- Frame Foto -->
+                    <div class="aspect-[4/3] w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                        <img src="${photo.src}" alt="${escapeHtml(photo.title)}" loading="lazy"
+                            onerror="this.onerror=null; this.src='${fallbackUrl}';"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
+                        
+                        <!-- Overlay Hover -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-3">
+                            <span class="text-xs font-semibold text-white flex items-center gap-1.5">
+                                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> Baca Cerita & Lihat
+                            </span>
+                        </div>
+
+                        <!-- Quick Download Button on Card -->
+                        <button type="button" data-download-id="${photo.id}" title="Unduh Foto Ini" class="quick-download-btn absolute top-2.5 right-2.5 p-2 rounded-xl bg-slate-900/65 hover:bg-indigo-600 text-white backdrop-blur-md shadow-sm transition-all active:scale-90 z-10">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        </button>
+
+                        <!-- Category Badge -->
+                        <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border backdrop-blur-md shadow-sm ${badgeStyle}">
+                            ${escapeHtml(photo.category)}
+                        </span>
+                    </div>
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.quick-download-btn')) return;
+                    openLightbox(index);
+                });
+
+                const quickDownloadBtn = card.querySelector('.quick-download-btn');
+                quickDownloadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadSinglePhoto(photo);
+                });
+
+                photoGrid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // FITUR EKSPOR & UNDUH GAMBAR (APK / WEBVIEW & BROWSER)
+        // ==========================================
+        function sanitizeFileName(name) {
+            return (name || 'foto-kelas')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '') || 'foto-kelas';
+        }
+
+        async function sourceToBlob(src) {
+            if (src.startsWith('data:')) {
+                const parts = src.split(',');
+                const mimeMatch = parts[0].match(/:(.*?);/);
+                const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+                const byteString = atob(parts[1]);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                return new Blob([ab], { type: mime });
+            } else {
+                const response = await fetch(src, { mode: 'cors' });
+                if (!response.ok) throw new Error('Gagal mengambil gambar dari URL');
+                return await response.blob();
+            }
+        }
+
+        function triggerBlobDownload(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 1500);
+        }
+
+        async function downloadSinglePhoto(photo) {
+            if (!photo) return;
+            const fileName = `${sanitizeFileName(classInfo.name)}_${sanitizeFileName(photo.title)}.jpg`;
+            showToast('Menyiapkan foto untuk diunduh...');
+
+            try {
+                const blob = await sourceToBlob(photo.src);
+                const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+
+                // Cek apakah berjalan di perangkat mobile / WebView yang mendukung Web Share API Files
+                const isMobileOrWebView = /Android|iPhone|iPad|iPod|wv/i.test(navigator.userAgent);
+                if (isMobileOrWebView && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: photo.title,
+                            text: `${photo.title} - Galeri ${classInfo.name}`
+                        });
+                        showToast('Foto siap disimpan atau dibagikan!');
+                        return;
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') return; // Pengguna membatalkan dialog share
+                        // Lanjut ke metode unduh standar jika share gagal
+                    }
+                }
+
+                // Fallback 1: Unduh langsung via Blob ObjectURL
+                triggerBlobDownload(blob, fileName);
+                showToast(`Mengunduh "${photo.title}"...`);
+            } catch (err) {
+                // Fallback 2: Jika URL eksternal terkena CORS di WebView, gunakan Data URL / Anchor langsung
+                try {
+                    const a = document.createElement('a');
+                    a.href = photo.src;
+                    a.download = fileName;
+                    a.target = '_blank';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showToast('Membuka gambar untuk disimpan...');
+                } catch (fallbackErr) {
+                    showToast('Gagal mengunduh gambar di perangkat ini.', 'error');
+                }
+            }
+        }
+
+        // ==========================================
+        // LOGIKA MODAL BACKUP, EKSPOR ZIP/JSON & PULIHKAN
+        // ==========================================
+        const backupModal = document.getElementById('backupModal');
+        const exportZipBtn = document.getElementById('exportZipBtn');
+        const exportZipBtnText = document.getElementById('exportZipBtnText');
+        const exportJsonBtn = document.getElementById('exportJsonBtn');
+        const importJsonInput = document.getElementById('importJsonInput');
+
+        document.getElementById('openBackupModalBtn').addEventListener('click', () => {
+            backupModal.classList.remove('hidden');
+            backupModal.classList.add('flex');
+        });
+
+        function closeBackupModal() {
+            backupModal.classList.add('hidden');
+            backupModal.classList.remove('flex');
+        }
+
+        document.getElementById('closeBackupModalBtn').addEventListener('click', closeBackupModal);
+
+        // 1. Ekspor Semua Foto ke ZIP
+        exportZipBtn.addEventListener('click', async () => {
+            if (allPhotos.length === 0) {
+                showToast('Belum ada foto di galeri untuk diekspor.', 'error');
+                return;
+            }
+            if (typeof JSZip === 'undefined') {
+                showToast('Pustaka ZIP belum termuat. Periksa koneksi internet Anda.', 'error');
+                return;
+            }
+
+            exportZipBtn.disabled = true;
+            exportZipBtnText.textContent = 'Mengemas foto ke ZIP...';
+
+            try {
+                const zip = new JSZip();
+                const folderName = `Galeri_${sanitizeFileName(classInfo.name)}`;
+                const imgFolder = zip.folder(folderName);
+                let successCount = 0;
+
+                for (let i = 0; i < allPhotos.length; i++) {
+                    const photo = allPhotos[i];
+                    try {
+                        const blob = await sourceToBlob(photo.src);
+                        const ext = (blob.type && blob.type.includes('png')) ? 'png' : 'jpg';
+                        const safeTitle = sanitizeFileName(photo.title);
+                        const datePrefix = (photo.momentDate || '').split('T')[0] || 'foto';
+                        imgFolder.file(`${datePrefix}_${i + 1}_${safeTitle}.${ext}`, blob);
+                        successCount++;
+                    } catch (e) {
+                        console.warn('Melewati foto yang gagal diambil untuk ZIP:', photo.title);
+                    }
+                }
+
+                if (successCount === 0) {
+                    throw new Error('Tidak ada gambar yang dapat dikemas.');
+                }
+
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const zipFileName = `${folderName}_${getTodayDateString()}.zip`;
+
+                const zipFile = new File([zipBlob], zipFileName, { type: 'application/zip' });
+                const isMobileOrWebView = /Android|iPhone|iPad|iPod|wv/i.test(navigator.userAgent);
+
+                if (isMobileOrWebView && navigator.canShare && navigator.canShare({ files: [zipFile] })) {
+                    try {
+                        await navigator.share({
+                            files: [zipFile],
+                            title: `Arsip Foto ${classInfo.name}`
+                        });
+                        showToast(`${successCount} foto berhasil dikemas ke ZIP!`);
+                        return;
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') return;
+                    }
+                }
+
+                triggerBlobDownload(zipBlob, zipFileName);
+                showToast(`${successCount} foto berhasil diunduh dalam file ZIP!`);
+            } catch (err) {
+                showToast('Gagal membuat file ZIP. Coba ekspor format .JSON.', 'error');
+            } finally {
+                exportZipBtn.disabled = false;
+                exportZipBtnText.textContent = 'Unduh Semua Foto (.ZIP)';
+            }
+        });
+
+        // 2. Ekspor Cadangan Lengkap (.JSON)
+        exportJsonBtn.addEventListener('click', async () => {
+            if (allPhotos.length === 0) {
+                showToast('Belum ada data kenangan untuk dicadangkan.', 'error');
+                return;
+            }
+
+            const backupPayload = {
+                app: 'GaleriKelas',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                classInfo: classInfo,
+                photos: allPhotos
+            };
+
+            const jsonString = JSON.stringify(backupPayload, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const fileName = `Backup_Galeri_${sanitizeFileName(classInfo.name)}_${getTodayDateString()}.json`;
+
+            const jsonFile = new File([blob], fileName, { type: 'application/json' });
+            const isMobileOrWebView = /Android|iPhone|iPad|iPod|wv/i.test(navigator.userAgent);
+
+            if (isMobileOrWebView && navigator.canShare && navigator.canShare({ files: [jsonFile] })) {
+                try {
+                    await navigator.share({
+                        files: [jsonFile],
+                        title: `Backup Galeri ${classInfo.name}`,
+                        text: `File cadangan kenangan ${classInfo.name} (${allPhotos.length} foto)`
+                    });
+                    showToast('File cadangan .JSON siap dibagikan!');
+                    return;
+                } catch (shareErr) {
+                    if (shareErr.name === 'AbortError') return;
+                }
+            }
+
+            triggerBlobDownload(blob, fileName);
+            showToast(`File cadangan (${allPhotos.length} kenangan) berhasil diekspor!`);
+        });
+
+        // 3. Pulihkan / Import Cadangan (.JSON)
+        importJsonInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    const importedPhotos = Array.isArray(parsed) ? parsed : parsed.photos;
+
+                    if (!Array.isArray(importedPhotos) || importedPhotos.length === 0) {
+                        throw new Error('Format file cadangan tidak valid atau kosong.');
+                    }
+
+                    // Perbarui identitas kelas jika ada di file backup & user belum mengubah default
+                    if (parsed.classInfo && parsed.classInfo.name) {
+                        classInfo = {
+                            name: parsed.classInfo.name,
+                            year: parsed.classInfo.year || classInfo.year
+                        };
+                        localStorage.setItem('galerikelas_identity', JSON.stringify(classInfo));
+                        updateClassIdentityUI();
+                    }
+
+                    const existingIds = new Set(allPhotos.map(p => p.id));
+                    let addedCount = 0;
+
+                    for (const item of importedPhotos) {
+                        if (item && item.src && item.title) {
+                            const photoId = item.id || ('kelas-imp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6));
+                            if (!existingIds.has(photoId)) {
+                                const cleanItem = {
+                                    id: photoId,
+                                    title: item.title,
+                                    category: item.category || 'Kebersamaan & Random',
+                                    uploader: item.uploader || 'Oleh: Anggota Kelas',
+                                    story: item.story || '',
+                                    momentDate: item.momentDate || getTodayDateString(),
+                                    src: item.src,
+                                    createdAt: item.createdAt || new Date().toISOString()
+                                };
+                                await savePhotoToDB(cleanItem);
+                                existingIds.add(photoId);
+                                addedCount++;
+                            }
+                        }
+                    }
+
+                    allPhotos = await getAllPhotosFromDB();
+                    applyFilters();
+                    closeBackupModal();
+
+                    if (addedCount > 0) {
+                        showToast(`Berhasil memulihkan ${addedCount} foto kenangan baru!`);
+                    } else {
+                        showToast('Semua foto dari file cadangan sudah ada di galeri.');
+                    }
+                } catch (err) {
+                    showToast('File cadangan tidak valid atau rusak.', 'error');
+                } finally {
+                    importJsonInput.value = '';
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // ==========================================
+        // LOGIKA MODAL TAMBAH FOTO KENANGAN
+        // ==========================================
+        const addPhotoModal = document.getElementById('addPhotoModal');
+        const addPhotoForm = document.getElementById('addPhotoForm');
+        const tabFileBtn = document.getElementById('tabFileBtn');
+        const tabUrlBtn = document.getElementById('tabUrlBtn');
+        const fileInputSection = document.getElementById('fileInputSection');
+        const urlInputSection = document.getElementById('urlInputSection');
+        const photoFileInput = document.getElementById('photoFile');
+        const photoUrlInput = document.getElementById('photoUrl');
+        const filePreviewImg = document.getElementById('filePreviewImg');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+        function getTodayDateString() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function openAddModal() {
+            addPhotoForm.reset();
+            uploadedFileBase64 = null;
+            filePreviewImg.classList.add('hidden');
+            uploadPlaceholder.classList.remove('hidden');
+            document.getElementById('photoDate').value = getTodayDateString();
+            switchUploadTab('file');
+            addPhotoModal.classList.remove('hidden');
+            addPhotoModal.classList.add('flex');
+        }
+
+        function closeAddModal() {
+            addPhotoModal.classList.add('hidden');
+            addPhotoModal.classList.remove('flex');
+        }
+
+        function switchUploadTab(tab) {
+            activeUploadTab = tab;
+            if (tab === 'file') {
+                tabFileBtn.className = 'py-2 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm transition-all';
+                tabUrlBtn.className = 'py-2 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all';
+                fileInputSection.classList.remove('hidden');
+                urlInputSection.classList.add('hidden');
+            } else {
+                tabUrlBtn.className = 'py-2 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm transition-all';
+                tabFileBtn.className = 'py-2 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all';
+                urlInputSection.classList.remove('hidden');
+                fileInputSection.classList.add('hidden');
+            }
+        }
+
+        function compressImage(file, maxWidth = 1400, quality = 0.85) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = (err) => reject(err);
+                };
+                reader.onerror = (err) => reject(err);
+            });
+        }
+
+        photoFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('Harap pilih file gambar yang valid.', 'error');
+                return;
+            }
+
+            try {
+                uploadedFileBase64 = await compressImage(file);
+                filePreviewImg.src = uploadedFileBase64;
+                filePreviewImg.classList.remove('hidden');
+                uploadPlaceholder.classList.add('hidden');
+
+                const titleInput = document.getElementById('photoTitle');
+                if (!titleInput.value.trim()) {
+                    const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+                    titleInput.value = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                }
+            } catch (err) {
+                showToast('Gagal memproses gambar.', 'error');
+            }
+        });
+
+        addPhotoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('photoTitle').value.trim();
+            const momentDate = document.getElementById('photoDate').value || getTodayDateString();
+            let uploader = document.getElementById('photoUploader').value.trim();
+            const category = document.getElementById('photoCategory').value;
+            const story = document.getElementById('photoStory').value.trim();
+            let imageSource = '';
+
+            if (activeUploadTab === 'file') {
+                if (!uploadedFileBase64) {
+                    showToast('Silakan pilih file foto terlebih dahulu.', 'error');
+                    return;
+                }
+                imageSource = uploadedFileBase64;
+            } else {
+                const urlVal = photoUrlInput.value.trim();
+                if (!urlVal) {
+                    showToast('Silakan masukkan tautan URL gambar.', 'error');
+                    return;
+                }
+                imageSource = urlVal;
+            }
+
+            if (uploader && !uploader.toLowerCase().startsWith('oleh:') && !uploader.toLowerCase().startsWith('dok.')) {
+                uploader = `Oleh: ${uploader}`;
+            } else if (!uploader) {
+                uploader = 'Oleh: Anggota Kelas';
+            }
+
+            const newPhoto = {
+                id: 'kelas-' + Date.now(),
+                title: title || 'Momen Tanpa Judul',
+                momentDate: momentDate,
+                uploader: uploader,
+                category: category,
+                story: story,
+                src: imageSource,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                await savePhotoToDB(newPhoto);
+                allPhotos.unshift(newPhoto);
+                // Urutkan ulang sesuai tanggal momen
+                allPhotos.sort((a, b) => new Date(b.momentDate || b.createdAt) - new Date(a.momentDate || a.createdAt));
+                applyFilters();
+                closeAddModal();
+                showToast('Kenangan baru berhasil ditambahkan ke galeri kelas!');
+            } catch (err) {
+                showToast('Gagal menyimpan foto kenangan.', 'error');
+            }
+        });
+
+        // ==========================================
+        // LOGIKA LIGHTBOX (PRATINJAU LAYAR PENUH)
+        // ==========================================
+        const lightboxModal = document.getElementById('lightboxModal');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxTitle = document.getElementById('lightboxTitle');
+        const lightboxStory = document.getElementById('lightboxStory');
+        const lightboxUploader = document.getElementById('lightboxUploader');
+        const lightboxCategory = document.getElementById('lightboxCategory');
+        const lightboxDate = document.getElementById('lightboxDate');
+        const lightboxCounter = document.getElementById('lightboxCounter');
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+
+        function openLightbox(index) {
+            currentLightboxIndex = index;
+            updateLightboxContent();
+            lightboxModal.classList.remove('hidden');
+            lightboxModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightboxModal.classList.add('hidden');
+            lightboxModal.classList.remove('flex');
+            document.body.style.overflow = '';
+            currentLightboxIndex = -1;
+        }
+
+        function updateLightboxContent() {
+            if (currentLightboxIndex < 0 || currentLightboxIndex >= filteredPhotos.length) return;
+            const photo = filteredPhotos[currentLightboxIndex];
+            const fallbackUrl = `https://placehold.co/800x600/1e293b/94a3b8?text=${encodeURIComponent(photo.title)}`;
+
+            lightboxImg.style.opacity = '0.4';
+            setTimeout(() => {
+                lightboxImg.src = photo.src;
+                lightboxImg.onerror = () => { lightboxImg.src = fallbackUrl; };
+                lightboxImg.style.opacity = '1';
+            }, 100);
+
+            lightboxTitle.textContent = photo.title;
+            lightboxCategory.textContent = photo.category;
+            lightboxUploader.textContent = photo.uploader || 'Oleh: Anggota Kelas';
+            lightboxDate.textContent = formatDateIndo(photo.momentDate || photo.createdAt);
+            lightboxCounter.textContent = `${currentLightboxIndex + 1} / ${filteredPhotos.length}`;
+
+            if (photo.story) {
+                lightboxStory.textContent = `"${photo.story}"`;
+                lightboxStory.classList.remove('hidden');
+            } else {
+                lightboxStory.textContent = '';
+                lightboxStory.classList.add('hidden');
+            }
+        }
+
+        function showNextPhoto() {
+            if (filteredPhotos.length <= 1) return;
+            currentLightboxIndex = (currentLightboxIndex + 1) % filteredPhotos.length;
+            updateLightboxContent();
+        }
+
+        function showPrevPhoto() {
+            if (filteredPhotos.length <= 1) return;
+            currentLightboxIndex = (currentLightboxIndex - 1 + filteredPhotos.length) % filteredPhotos.length;
+            updateLightboxContent();
+        }
+
+        // Hapus Foto
+        document.getElementById('lightboxDeleteBtn').addEventListener('click', () => {
+            confirmDeleteModal.classList.remove('hidden');
+            confirmDeleteModal.classList.add('flex');
+        });
+
+        document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+            confirmDeleteModal.classList.add('hidden');
+            confirmDeleteModal.classList.remove('flex');
+        });
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            const photoToDelete = filteredPhotos[currentLightboxIndex];
+            if (!photoToDelete) return;
+
+            try {
+                await deletePhotoFromDB(photoToDelete.id);
+                allPhotos = allPhotos.filter(p => p.id !== photoToDelete.id);
+                
+                confirmDeleteModal.classList.add('hidden');
+                confirmDeleteModal.classList.remove('flex');
+
+                applyFilters();
+                showToast('Foto kenangan berhasil dihapus.');
+
+                if (filteredPhotos.length === 0) {
+                    closeLightbox();
+                } else {
+                    if (currentLightboxIndex >= filteredPhotos.length) {
+                        currentLightboxIndex = filteredPhotos.length - 1;
+                    }
+                    updateLightboxContent();
+                }
+            } catch (err) {
+                showToast('Gagal menghapus foto.', 'error');
+            }
+        });
+
+        // Navigasi Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (lightboxModal.classList.contains('hidden')) return;
+            if (!confirmDeleteModal.classList.contains('hidden')) return;
+
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') showNextPhoto();
+            if (e.key === 'ArrowLeft') showPrevPhoto();
+        });
+
+        // ==========================================
+        // EVENT LISTENERS UI & DARK MODE
+        // ==========================================
+        document.getElementById('openAddModalBtn').addEventListener('click', openAddModal);
+        document.getElementById('emptyAddBtn').addEventListener('click', openAddModal);
+        document.getElementById('closeAddModalBtn').addEventListener('click', closeAddModal);
+        document.getElementById('cancelAddModalBtn').addEventListener('click', closeAddModal);
+        tabFileBtn.addEventListener('click', () => switchUploadTab('file'));
+        tabUrlBtn.addEventListener('click', () => switchUploadTab('url'));
+
+        document.getElementById('closeLightboxBtn').addEventListener('click', closeLightbox);
+        document.getElementById('lightboxDownloadBtn').addEventListener('click', () => {
+            if (currentLightboxIndex >= 0 && currentLightboxIndex < filteredPhotos.length) {
+                downloadSinglePhoto(filteredPhotos[currentLightboxIndex]);
+            }
+        });
+        document.getElementById('nextPhotoBtn').addEventListener('click', showNextPhoto);
+        document.getElementById('prevPhotoBtn').addEventListener('click', showPrevPhoto);
+
+        // Filter Kategori
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryButtons.forEach(b => {
+                    b.className = 'filter-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-700';
+                });
+                btn.className = 'filter-btn active px-4 py-2 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm';
+                
+                currentCategory = btn.getAttribute('data-category');
+                applyFilters();
+            });
+        });
+
+        // Pencarian Real-time
+        function handleSearch(e) {
+            searchQuery = e.target.value;
+            searchInputDesktop.value = searchQuery;
+            searchInputMobile.value = searchQuery;
+            applyFilters();
+        }
+        searchInputDesktop.addEventListener('input', handleSearch);
+        searchInputMobile.addEventListener('input', handleSearch);
+
+        // Dark Mode Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        function initTheme() {
+            const savedTheme = localStorage.getItem('galerikelas_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('galerikelas_theme', isDark ? 'dark' : 'light');
+        });
+
+        // Muat ulang contoh foto kelas
+        document.getElementById('resetDemoBtn').addEventListener('click', async () => {
+            for (const item of DEFAULT_CLASS_PHOTOS) {
+                const exists = allPhotos.some(p => p.id === item.id);
+                if (!exists) {
+                    await savePhotoToDB(item);
+                }
+            }
+            allPhotos = await getAllPhotosFromDB();
+            applyFilters();
+            showToast('Contoh foto kenangan kelas telah dimuat ulang.');
+        });
+
+        // Helper: Format Tanggal Indonesia
+        function formatDateIndo(dateString) {
+            if (!dateString) return '-';
+            // Tangani format YYYY-MM-DD agar tidak bergeser zona waktu
+            const parts = dateString.split('T')[0].split('-');
+            if (parts.length === 3) {
+                const date = new Date(parts[0], parts[1] - 1, parts[2]);
+                return date.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            }
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        // Helper: Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Helper: Notifikasi Toast
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900';
+            
+            toast.className = `${bgColor} px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-semibold flex items-center gap-2 animate-fade-in`;
+            toast.innerHTML = `
+                <i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle-2'}" class="w-4 h-4 shrink-0"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Inisialisasi Aplikasi
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadClassIdentity();
+            lucide.createIcons();
+            loadInitialData();
+        });
+    </script>
+</body>
+</html>
+```
